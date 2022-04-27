@@ -2,6 +2,8 @@ import:
     # - https://raw.githubusercontent.com/sensescape/xyz-studio-dark/master/scene.yaml
     # - https://raw.githubusercontent.com/sensescape/xyz-pixel-dark/master/scene.yaml
     - https://raw.githubusercontent.com/sensescape/xyz-pixel/master/scene.yaml
+    # - https://raw.githubusercontent.com/sensescape/xyz-studio-spring-soft/master/scene.yaml
+    - https://www.nextzen.org/carto/refill-style/9/themes/refill-icons.zip
     # - https://www.nextzen.org/carto/walkabout-style/walkabout-style.zip
     # - https://raw.githubusercontent.com/sensescape/xyz-pixel-pastel/master/scene.yaml
     # - https://www.nextzen.org/carto/refill-style/refill-style.zip
@@ -13,7 +15,7 @@ import:
     # - https://www.nextzen.org/carto/refill-style/11/themes/terrain-shading-dark.zip
 
 global:
-    token: DpCrhQqsR2igQPEINRTfcw
+    token: FTYsIM6IQpC4nFOM2S6LpQ
     block_line: 50
     block: 49
     point_zoom: 14
@@ -36,17 +38,23 @@ sources:
 
     _routes:
         type: GeoJSON
-        url: https://raw.githubusercontent.com/burritojustice/boulder_bike_bus/main/routes.geojson
+        url: https://raw.githubusercontent.com/sheeter/boulder_bike_bus/main/routes.geojson
+        url_params:
+            tile_size: 512
     _schools:
         type: GeoJSON
         url: https://raw.githubusercontent.com/sheeter/boulder_bike_bus/main/schools.geojson
+    _arrows:
+        type: GeoJSON
+        url: https://raw.githubusercontent.com/burritojustice/boulder_bike_bus/burrito/arrows.geojson
+        
     _satellite:
         # url: https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/terrain.day/{z}/{x}/{y}/512/png
         # url: https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=wTkSyYFwAJ31EaUeDbXl
         url: https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg
         type: Raster
         utl_params: 
-            key: wTkSyYFwAJ31EaUeDbXl
+            key: GqZWha4PKN6pK6IEijud
         # rasters: [terrain_normals]
         # url_params:
         #     app_id: 0VeWPmMuUeMebnjNVGz9
@@ -90,24 +98,24 @@ styles:
             blocks:
                 color: |
                     color.a = step(.2,fract(u_time-v_texcoord.y*.45));
-
-    _arrows:
-        base: lines
-        blend: overlay
-        texcoords: true
-        animated: true
-        texture: https://burritojustice.github.io/valencia_bikeway/images/bus.png
-        shaders:
-            global:
-                float shape(vec2 st, int N){
-                    st = st *2.-1.;
-                    float a = atan(st.x,st.y)+PI;
-                    float r = TWO_PI/float(N);
-                    return cos(floor(.5+a/r)*r-a)*length(st);
-                }
-            blocks:
-                color: |
-                    color.a = step(.5,fract(u_time-v_texcoord.y*.5));
+ 
+    # _arrows:
+    #     base: lines
+    #     blend: overlay
+    #     texcoords: true
+    #     animated: true
+    #     texture: https://www.nextzen.org/carto/refill-style/9/icons/2x/ux-route-arrow.png
+    #     shaders:
+    #         global:
+    #             float shape(vec2 st, int N){
+    #                 st = st *2.-1.;
+    #                 float a = atan(st.x,st.y)+PI;
+    #                 float r = TWO_PI/float(N);
+    #                 return cos(floor(.5+a/r)*r-a)*length(st);
+    #             }
+    #         blocks:
+    #             color: |
+    #                 color.a = step(.5,fract(u_time-v_texcoord.y*.5));
                     
 
 layers:
@@ -119,13 +127,13 @@ layers:
     
     _schools:
         data: {source: _schools}
-        # filter: {$zoom: {min: 17}}
+        filter: {not: {visible: hide}}
         draw:
-            points:
+            _points:
                 collide: false
                 color: |
                     function(){
-                        var color = 'red'
+                        var color = 'violet'
                         if (feature.type.includes("pre")){
                             color = 'white'
                             }
@@ -163,7 +171,34 @@ layers:
                             color: black
                             width: 3px
 
-
+    _arrows:
+        # enabled: false
+        data: {source: _arrows}
+        routes:
+            _route:
+                # enabled: false
+                draw:
+                    _ants: 
+                        # color: |
+                        #     function(){
+                        #         return feature.stroke
+                        #         }
+                        color: blue
+                        width: [[14,2px],[18,8px]]
+                        order: 1001
+                    _lines: 
+                        color: white
+                        width: [[14,3px],[18,10px]]
+                        order: 1000
+            _arrow:
+                filter: {kind: arrow}
+                draw:
+                    mapzen_icon_library:
+                        sprite: ux-route-arrow
+                        angle: function(){return feature.direction}  
+                        color: lightblue
+                        size: [[14,10px],[18,30px]]
+        
     _routes:
         # enabled: false
         data: {source: _routes}
@@ -175,17 +210,24 @@ layers:
                         }
                 # color: black
                 width: [[14,2px],[18,8px]]
-                order: 1000
+                order: 1001
             _lines: 
                 color: white
                 width: [[14,3px],[18,10px]]
                 order: 1000
+        
+            # mapzen_icon_library:
+            #     sprite: ux-route-arrow
+            #     angle: 45
+                
 
         labels:
-            filter: {$zoom: {min: 14}}
+            filter: {$zoom: {min: 12}}
             draw:
-                text:
-                    # optional: true
+                _text:
+                    text_wrap: true
+                    # optional: false
+                    # collide: true
                     # text_source: name
                     font:
                         fill: black
@@ -207,6 +249,7 @@ layers:
                     order: 1001
         
         _meetups:
+            # enabled: false
             filter: {01type: marker}
             draw:
                 _points:
